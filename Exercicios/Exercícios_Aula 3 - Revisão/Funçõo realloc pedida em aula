@@ -1,0 +1,25 @@
+#include <stdlib.h>
+#include <string.h>
+
+void *realloc(void *pont, size_t newSize) {
+    if (newSize == 0) { 
+        free(pont); // Se o novo tamanho for 0, libera a memória e retorna NULL
+        return NULL;
+    }
+    
+    if (!pont) { 
+        return malloc(newSize); // Se o ponteiro original for NULL, apenas aloca nova memória
+    }
+    
+    void *newBlock = malloc(newSize); // Aloca novo bloco de memória
+    if (!newBlock) {
+        return NULL; // Retorna NULL se a alocação falhar
+    }
+    
+    size_t oldSize = malloc_usable_size(pont); // Obtém o tamanho do bloco antigo (dependente do sistema)
+    size_t copySize = (oldSize < newSize) ? oldSize : newSize; // Define o tamanho a ser copiado
+    memcpy(newBlock, pont, copySize); // Copia os dados do bloco antigo para o novo
+    
+    free(pont); // Libera o bloco antigo
+    return newBlock; // Retorna o novo ponteiro
+}
