@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char nome[30];
+    int idade;
+} Pessoa;
+
+typedef struct Nodo {
+    Pessoa pessoa;
+    struct Nodo *prox;
+} Nodo;
+
+typedef struct {
+    Nodo *topo;
+} Pilha;
+
+void PUSH(Pilha *p, char nome[], int idade) {
+    Nodo *novo = (Nodo *)malloc(sizeof(Nodo));
+    if (!novo) {
+        printf("Erro ao alocar memória!\n");
+        return;
+    }
+    strcpy(novo->pessoa.nome, nome);
+    novo->pessoa.idade = idade;
+    novo->prox = p->topo;
+    p->topo = novo;
+    printf("Pessoa adicionada!\n");
+}
+
+void POP(Pilha *p) {
+    if (!p->topo) {
+        printf("Pilha vazia!\n");
+        return;
+    }
+    Nodo *temp = p->topo;
+    p->topo = p->topo->prox;
+    free(temp);
+    printf("Pessoa removida do topo!\n");
+}
+
+void RESET(Pilha *p, char nome[]) {
+    Nodo *atual = p->topo, *anterior = NULL;
+    while (atual && strcmp(atual->pessoa.nome, nome) != 0) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+    if (!atual) {
+        printf("Pessoa não encontrada!\n");
+        return;
+    }
+    if (!anterior) {
+        p->topo = atual->prox;
+    } else {
+        anterior->prox = atual->prox;
+    }
+    free(atual);
+    printf("Pessoa removida!\n");
+}
+
+void CLEAR(Pilha *p) {
+    Nodo *temp;
+    while (p->topo) {
+        temp = p->topo;
+        p->topo = p->topo->prox;
+        free(temp);
+    }
+    printf("Pilha limpa!\n");
+}
+
+void listarPessoas(Pilha *p) {
+    Nodo *atual = p->topo;
+    if (!atual) {
+        printf("Pilha vazia!\n");
+        return;
+    }
+    printf("Lista de Pessoas:\n");
+    while (atual) {
+        printf("Nome: %s, Idade: %d\n", atual->pessoa.nome, atual->pessoa.idade);
+        atual = atual->prox;
+    }
+}
+
+int main() {
+    Pilha p = {NULL};
+    int opcao;
+    char nome[30];
+    int idade;
+    do {
+        printf("\nMenu:\n");
+        printf("0: Inserir pessoa\n");
+        printf("1: Deletar pessoa do topo\n");
+        printf("2: Deletar pessoa por nome\n");
+        printf("3: Limpar pilha\n");
+        printf("4: Listar pessoas\n");
+        printf("5: Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+        getchar();
+        switch (opcao) {
+            case 0:
+                printf("Digite o nome: ");
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = 0;
+                printf("Digite a idade: ");
+                scanf("%d", &idade);
+                PUSH(&p, nome, idade);
+                break;
+            case 1:
+                POP(&p);
+                break;
+            case 2:
+                printf("Digite o nome a ser removido: ");
+                fgets(nome, 30, stdin);
+                nome[strcspn(nome, "\n")] = 0;
+                RESET(&p, nome);
+                break;
+            case 3:
+                CLEAR(&p);
+                break;
+            case 4:
+                listarPessoas(&p);
+                break;
+            case 5:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opção inválida!\n");
+        }
+    } while (opcao != 5);
+    CLEAR(&p);
+    return 0;
+}
