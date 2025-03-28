@@ -1,0 +1,214 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+Estrutura da agenda:
+*pBuffer -> Numero de pessoas na agenda
+            i == variavel para incremento em loops
+            j == outra variavel para incremento em loops
+            opção para o menu
+            nome para busca
+            nome 1
+            idade 1
+            email 1
+            nome 2
+            idade 2
+            email 2
+            ...
+*/
+
+//================== Defines ==================//
+
+#define INT sizeof(int)
+#define MAX_PESSOAS ( 100 )
+#define TAM_NOME ( 50 )
+#define TAM_EMAIL ( 50 )
+#define TAM_AUX ( ( INT * 4 ) + TAM_NOME)
+#define TAM_ENTRADA (TAM_NOME + TAM_EMAIL + INT)
+#define AGENDA_SIZE (MAX_PESSOAS * TAM_ENTRADA)
+
+//================== Funções ==================//
+
+void adicionarPessoa( void *pBuffer );
+
+void removerPessoa( void *pBuffer );
+
+void buscarPessoa( void *pBuffer );
+
+void listarTodos( void *pBuffer );
+
+//=============================================//
+
+int main() {
+    //alocando o pBuffer com espaço para 100 entradas e as variaveis auxiliares
+    void *pBuffer = malloc( TAM_AUX + AGENDA_SIZE );
+    if ( pBuffer == NULL ) {
+        printf("Erro ao alocar memória.\n");
+        return 1;
+    }
+    //endereçando todas as variaveis, e inicializando o contador de pessoas.
+    int *numPessoas = ( int * )pBuffer;
+    *numPessoas = 0;
+    int *i = ( int * )( pBuffer + INT );
+    int *j = ( int * )( pBuffer + ( INT * 2 ) );
+    int *opcao = ( int *)( pBuffer + ( INT * 3 ) );
+    char *nAux = ( char *)( pBuffer + (INT * 4 ) );
+    
+    //cria um loop para o menu
+    do {
+        printf("\n========== Menu ==========\n");
+        printf("1- Adicionar Pessoa\n");
+        printf("2- Remover Pessoa\n");
+        printf("3- Buscar Pessoa\n");
+        printf("4- Listar todos\n");
+        printf("5- Sair\n");
+        printf("==========================\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", opcao);
+        printf("\n");
+
+        switch ( *opcao ) {
+            case 1:
+                adicionarPessoa( pBuffer );
+                break;
+            case 2:
+                removerPessoa( pBuffer );
+                break;
+            case 3:
+                buscarPessoa( pBuffer );
+                break;
+            case 4:
+                listarTodos( pBuffer );
+                break;
+            case 5:
+                printf("Saindo...\n");
+                break;
+            default:
+                printf("Opção inválida.\n");
+                break;
+        }
+    } while ( *opcao != 5 );
+
+    free( pBuffer );
+    return 0;
+}
+
+
+//========== Funções ==========//
+
+//========== Adicionar pessoas ==========//
+/*Cria ponteiros, que apontam para dentro
+ do pBuffer, onde serão armazenadas as
+ informações de cada entrada.            */
+//=======================================//
+void adicionarPessoa( void *pBuffer ) {
+    int *numPessoas = ( int * )pBuffer;
+    char *nome = ( char * )( pBuffer + TAM_AUX + ( *numPessoas ) * TAM_ENTRADA );
+    int *idade = ( int * )( nome + TAM_NOME );
+    char *email = ( char * )( idade + INT );
+
+    printf("Nome: ");
+    scanf("%s", nome);
+    printf("Idade: ");
+    scanf("%d", idade);
+    printf("Email: ");
+    scanf("%s", email);
+
+    ( *numPessoas )++;
+}
+//========== Remover Pessoa ==========//
+/*Compara o nome recebido com todos os
+ da lista, se encontra, sobre escreve 
+ os nomes seguintes sobre o espaço da
+ entrada.                             */
+//====================================//
+void removerPessoa( void *pBuffer ) {
+    int *numPessoas = ( int * )pBuffer;
+    if ( *numPessoas == 0 ) {
+        printf("\nNenhuma pessoa para remover.\n");
+        return;
+    }
+    
+    int *i = ( int * )( pBuffer + INT );
+    int *j = ( int * )( pBuffer + ( INT * 2 ) );
+
+    char *nAux = ( char * )pBuffer + ( INT * 4 );
+    printf("Nome da pessoa a remover: ");
+    scanf("%s", nAux);
+
+    for ( *i = 0; *i < *numPessoas; ( *i )++ ) {
+        char *pessoaAtual = ( char * )( ( char * )pBuffer + TAM_AUX + *i * TAM_ENTRADA );
+        if ( strcmp(pessoaAtual, nAux) == 0 ) {
+            for ( *j = *i; *j < *numPessoas - 1; (*j)++ ) {
+                char *pessoaJ = ( char * )( pBuffer + TAM_AUX + *j * TAM_ENTRADA );
+                char *pessoaJ1 = ( char * )( pBuffer + TAM_AUX + ( *j + 1 ) * TAM_ENTRADA );
+                strcpy(pessoaJ, pessoaJ1);
+                *( int * )( pessoaJ + TAM_NOME ) = *( int * )( pessoaJ1 + TAM_NOME );
+                strcpy(pessoaJ + TAM_NOME + INT, pessoaJ1 + TAM_NOME + INT);
+            }
+            ( *numPessoas )--;
+    
+            printf("Pessoa removida.\n");
+            return;
+        }
+    }
+    
+    printf("Pessoa não encontrada.\n");
+}
+//========== Buscar Pessoa ==========//
+/*Recebe um nome, e compara com todos
+ da lista, se houver algum igual, 
+ imprime na tela as informações da 
+ entrada.                            */
+//===================================//
+void buscarPessoa( void *pBuffer ) {
+    int *numPessoas = ( int * )pBuffer;
+    char *nAux = ( char * )pBuffer + ( INT * 4 );
+    printf("Nome da pessoa a buscar: ");
+    scanf("%s", nAux);
+    
+    int *i = ( int * )( pBuffer + INT );
+
+    for ( *i = 0; *i < *numPessoas; (*i)++ ) {
+        char *pessoaAtual = ( char * )( pBuffer + TAM_AUX + ( *i * TAM_ENTRADA ) );
+        if ( strcmp(pessoaAtual, nAux) == 0 ) {
+            printf("\n==========================\n");
+            printf("Nome: \n%s\n", pessoaAtual);
+            printf("==========================\n");
+            printf("Idade: \n%d\n", *(int *)(pessoaAtual + TAM_NOME));
+            printf("==========================\n");
+            printf("Email:\n%s\n", (pessoaAtual + (TAM_NOME + INT)));
+            printf("==========================");
+    
+            return;
+        }
+    }
+    printf("\nPessoa não encontrada.\n");
+}
+//========== Listar Todos ==========//
+/*Imprime os dados de todas as 
+entradas da agenda, exceto se a lista 
+estiver vazia.                      */
+//==================================//
+void listarTodos( void *pBuffer ) {
+    int *numPessoas = ( int * )pBuffer;
+    int *i = ( int * )( pBuffer + INT );
+    if( *numPessoas == 0 ){
+        printf("Lista Vazia!\n");
+
+    }
+    else{
+        for ( *i = 0; *i < *numPessoas; ( *i )++ ) {
+            char *pessoaAtual = ( char * )( pBuffer + TAM_AUX + ( *i * TAM_ENTRADA ) );
+            printf("\n==========================\n");
+            printf("Nome: \n%s\n", pessoaAtual);
+            printf("==========================\n");
+            printf("Idade: \n%d\n", *(int *)(pessoaAtual + TAM_NOME));
+            printf("==========================\n");
+            printf("Email:\n%s\n", (pessoaAtual + TAM_NOME + INT));
+            printf("==========================\n");
+        }
+
+    }
+}
